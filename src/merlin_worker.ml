@@ -1,1 +1,2 @@
-let () = Worker.run ()
+let () =
+  Worker.run ()

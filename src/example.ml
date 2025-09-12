@@ -1,13 +1,11 @@
-let print = {|let () = print_endline "Welcome to the OCaml Playground"|}
+let locality : string  = {|(* Read more about OxCaml at: https://blog.janestreet.com/oxidizing-ocaml-locality *)
+open Base
 
-let eio =
-  {|(* Discover more at https://github.com/ocaml-multicore/eio/
-   and the incredible work to make this work in jsoo https://github.com/ocsigen/js_of_ocaml/pull/1340 *)
-open Eio
+let is_empty (s : string @ local) =
+ String.length s = 0
 
-let () =
-  Eio_mock.Backend.run @@ fun _ ->
-  Fiber.both
-    (fun () -> Fiber.yield (); traceln "world!")
-    (fun () -> traceln "Hello ")
+let () = 
+  let msg : string @ local = "Hello, OxCaml!" in
+  if not (is_empty msg) then
+    Stdlib.print_endline msg
 |}

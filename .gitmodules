@@ -7,9 +7,3 @@
 [submodule "jsoo-code-mirror"]
 	path = jsoo-code-mirror
 	url = https://github.com/patricoferris/jsoo-code-mirror
-[submodule "brr"]
-	path = brr
-	url = https://github.com/patricoferris/brr
-[submodule "js_of_ocaml"]
-	path = js_of_ocaml
-	url = https://github.com/ocsigen/js_of_ocaml

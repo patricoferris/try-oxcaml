@@ -6,11 +6,28 @@ let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv
 let get_el_by_id i =
   Brr.Document.find_el_by_id G.document (Jstr.of_string i) |> Option.get
 
+let position_div = get_el_by_id "position"
+
+let position_extension =
+  let update_position (e : Editor.View.t) =
+    let state = Editor.View.state e in
+    let doc = Editor.State.doc state in
+    let range = Editor.State.selection state |> Editor.Selection.main in
+    let position = Editor.Selection.Range.head range in
+    let line = Text.line_at doc position in
+    let col = position - Text.Line.from line in
+    El.set_children position_div [
+      El.txt' (string_of_int (Text.Line.number line));
+      El.txt' ":"; El.txt' (string_of_int col) ]
+  in
+  Editor.View.Plugin.v update_position
+  |> Editor.View.Plugin.to_extension
+
 let init ?doc ?(exts = [||]) () =
   let open Editor in
   let config =
     State.Config.create ?doc
-      ~extensions:(Array.concat [ [| basic_setup |]; exts ])
+      ~extensions:(Array.concat [ [| basic_setup; position_extension |]; exts ])
       ()
   in
   let state = State.create ~config () in
@@ -22,7 +39,7 @@ let set view ~doc ~exts =
   let open Editor in
   let config =
     State.Config.create ~doc
-      ~extensions:(Array.concat [ [| basic_setup |]; exts ])
+      ~extensions:(Array.concat [ [| basic_setup; position_extension |]; exts ])
       ()
   in
   let state = State.create ~config () in

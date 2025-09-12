@@ -4,23 +4,23 @@
  (name worker)
  (modes byte)
  (flags
-   (:standard -linkall))
+  (:standard -linkall))
  (modules worker)
- (libraries eio eio.core eio.mock js_top_worker))
+ (libraries base js_top_worker))
 
 (executable
  (name merlin_worker)
  (modes js)
- ; (flags -g)
- ; (js_of_ocaml (flags --debug-info --pretty --source-map))
+ (js_of_ocaml
+  (flags --source-map --pretty --debug-info))
  (modules merlin_worker)
- (libraries eio eio.core eio.mock merlin-js.worker))
+ (libraries merlin-js.worker))
 
 (rule
  (targets export.txt)
  (deps worker.bc)
  (action
-  (run jsoo_listunits -o %{targets} stdlib eio eio.core eio.mock)))
+  (run jsoo_listunits -o %{targets} stdlib base)))
 
 (rule
  (targets worker.js)
@@ -31,8 +31,14 @@
    %{dep:export.txt}
    --toplevel
    --pretty
+   --source-map
+   --debug-info
+   --no-inline
    +toplevel.js
    +dynlink.js
+   +bigarray.js
+   +capsule.js
+   +base/runtime.js
    %{dep:worker.bc}
    -o
    %{targets})))
@@ -42,11 +48,18 @@
 (executable
  (name main)
  (modes js)
+ ; (js_of_ocaml (flags 
+ ;   --pretty
+ ;   --source-map
+ ;   --debug-info))
  (modules
   (:standard \ worker merlin_worker))
  (libraries
   brr
   code-mirror
+  compiler-libs.common
+  compiler-libs.toplevel
+  merlin-js.worker.static
   merlin-js.code-mirror
   js_top_worker-client
   rpclib-lwt))

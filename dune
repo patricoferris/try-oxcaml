@@ -3,7 +3,8 @@
 (subdir
  docs/
  (rule
-  (mode (promote (until-clean)))
+  (mode
+   (promote (until-clean)))
   (targets playground.js)
   (deps
    (:js %{workspace_root}/src/main.bc.js))
@@ -21,15 +22,20 @@
     %{js})))
  (rule
   (targets worker.js)
-  (mode (promote (until-clean)))
+  (mode
+   (promote (until-clean)))
   (deps
    (:js %{workspace_root}/src/worker.js))
   (action
-   (run jsoo_minify %{js} -o %{targets})))
+   (copy %{js} %{targets})))
+ ; (run jsoo_minify %{js} -o %{targets})))
  (rule
   (targets merlin.js)
-  (mode (promote (until-clean)))
+  (mode
+   (promote (until-clean)))
   (deps
    (:js %{workspace_root}/src/merlin_worker.bc.js))
   (action
-   (run jsoo_minify %{js} -o %{targets}))))
+   (copy %{js} %{targets}))))
+
+; (run jsoo_minify %{js} -o %{targets}))))

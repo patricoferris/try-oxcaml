@@ -37,6 +37,10 @@ let async_raise f = Lwt.async (fun () -> Lwt.map or_raise @@ f ())
 
 module Merlin = Merlin_codemirror.Make (struct
   let worker_url = "./merlin.js"
+  let cmis = Protocol.{
+    static_cmis = Static_files.stdlib_cmis;
+    dynamic_cmis = None;
+  }
 end)
 
 (* Need to port lesser-dark and custom theme to CM6, until then just using the
@@ -52,17 +56,28 @@ let get_el_by_id s =
       Console.warn [ Jstr.v "Failed to get elemented by id" ];
       invalid_arg s
 
-let cyan el = El.set_inline_style (Jstr.v "color") (Jstr.v "rgba(30, 58, 138)") el
+let white el = El.set_inline_style (Jstr.v "color") (Jstr.v "rgba(255, 255, 255)") el
+let red el = El.set_inline_style (Jstr.v "color") (Jstr.v "rgb(255, 99, 99)") el
 
 let handle_output (o : Toplevel_api.exec_result) =
   let output = get_el_by_id "output" in
+  let stdout =
+    El.(p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.stdout)]) 
+  in
+  let stderr = 
+     El.(p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.stderr)])
+  in
+  let ppf =
+    El.(p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.caml_ppf)])
+  in
   let out = El.(div [
-    p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.stdout)]; 
-    p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.stderr)]; 
-    p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.caml_ppf)]
+    stdout;
+    stderr;
+    ppf
   ])
   in 
-  cyan out;
+  white stdout;
+  red stderr;
   El.append_children output [ out ]
 
 module Codec = struct
@@ -72,14 +87,17 @@ module Codec = struct
     let uri = Window.location G.window |> Uri.fragment in
     match Uri.Params.find (Jstr.v "code") (Uri.Params.of_jstr uri) with
     | Some jstr ->
+        let+ jstr = Uri.decode_component jstr in
         let+ dec = Base64.decode jstr in
         let+ code = Base64.data_utf_8_to_jstr dec in
         Ok (Jstr.to_string code)
-    | _ -> Ok Example.eio
+    | None ->
+      Ok Example.locality
 
   let to_window s =
     let data = Base64.data_utf_8_of_jstr s in
     let+ bin = Base64.encode data in
+    let+ bin = Brr.Uri.encode_component bin in
     let uri = Window.location G.window in
     let+ s = Uri.with_uri ~fragment:(Jstr.concat [ Jstr.v "code="; bin ]) uri in
     Ok (Window.set_location G.window s)
@@ -87,7 +105,7 @@ end
 
 let setup () =
   let initial_code =
-    Result.value ~default:Example.eio (Codec.from_window ())
+    Result.value ~default:Example.locality (Codec.from_window ())
   in
   let _state, view =
     Edit.init ~doc:(Jstr.v initial_code)
@@ -111,15 +129,17 @@ let setup () =
   in
   let* _ = setup () in
   let share = get_el_by_id "share" in
-  Ev.(
+  let _listener = Ev.(
     listen click
       (fun _ ->
         Console.log_if_error ~use:()
           (Codec.to_window @@ Jstr.v (Edit.get_doc view)))
-      (El.as_target share));
+      (El.as_target share))
+  in
   let button = get_el_by_id "run" in
   let on_click _ =
     let run () =
+      Brr.Console.log [ "Running" ];
       El.set_children button [];
       El.set_class (Jstr.v "loader") true button;
       let* o = with_rpc (Lwt.return rpc) Toprpc.exec (Edit.get_doc view ^ ";;") in
@@ -130,6 +150,7 @@ let setup () =
     in
     async_raise run
   in
-  Lwt_result.return @@ Ev.(listen click on_click (El.as_target button))
+  let _listener = Ev.(listen click on_click (El.as_target button)) in
+  Lwt_result.return ()
 
 let () = async_raise setup

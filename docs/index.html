@@ -2,10 +2,11 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Try Eio</title>
-    <meta name="description" content="An OCaml toplevel in the browser supporting Eio and effects">
-    <meta name="keywords" content="OCaml, effects, js_of_ocaml">
+    <title>Try OxCaml</title>
+    <meta name="description" content="An OCaml toplevel supporting Janestreet's Modes">
+    <meta name="keywords" content="OxCaml, Janestreet">
     <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="tailwind.css">
     <style>
         html {
             height: 100%;
@@ -14,9 +15,12 @@
             border-right-width: thick;
             border-right-style: groove;
         }
+		.code-preview {
+          font-family: "menlo", monospace;
+		}
         .cm-editor {
             height: 100%;
-            font-size: 1.2em;
+            font-size: 1.45em;
         }
         .editor-toolbar {
             display: flex;
@@ -41,30 +45,37 @@
         }
     </style>
 </head>
-<body class="h-full">
+<body style="height: 100vh">
     <!-- Header -->
-    <div style="min-height: 50px;"class="flex items-center justify-between flex-wrap bg-green-800 px-6 py-4">
+    <div style="height: 7vh; min-height: 50px"class="flex items-center justify-between flex-wrap bg-amber-900 px-6 py-4">
         <div class="grid-cols-1 gap-2 overflow-y-scroll lg:col-span-3 text-white mr-6">
-            <span class="font-semibold text-3xl tracking-tight">Try Eio</span>
+            <span class="font-semibold text-3xl tracking-tight">Try OxCaml</span>
             &nbsp;&nbsp;
-            <span><a style="text-decoration: underline;" target="_blank" href="https://github.com/patricoferris/try-eio">(Github)</a></span>
+            <span><a style="text-decoration: underline;" target="_blank" href="https://github.com/patricoferris/try-oxcaml">(Github)</a></span>
         </div>
     </div>
     <!-- Main body -->
-    <div class="bg-white h-full dark:bg-black">
+    <div style="background-color: #282c34; height: 93vh">
         <main>
             <div>
-            <div style="height: 100%;" class="grid grid-cols-1 items-start lg:grid-cols-6">
+            <div class="grid grid-cols-1 items-start lg:grid-cols-6">
                 <div class="grid-cols-1 gap-2 overflow-y-scroll lg:col-span-3">
-                    <div id="editor1"></div>
+                    <div style="height: 87vh;" id="editor1"></div>
+                    <div style="height: 100%;" style="background-color: #222;">
+						<div style="text-align: right;" class="font-semibold text-white p-2" id="position"></div>
+					</div>
                 </div>
-                <div class="grid-cols-1 h-full overflow-y-scroll lg:col-span-3 code-preview flex-col overflow-auto p-4 text-white">
-                    <div style="background-color: #222;">
-                        <button id="run" style="padding: 10px" class="btn btn-md btn-secondary p-4">
+                <div style="background-color: #222; height: 93vh"
+					 class="grid-cols-1 overflow-y-scroll lg:col-span-3 code-preview flex-col overflow-auto text-white">
+                    <div style="background-color: #222; position: sticky; width: 100%; top: 0">
+                        <button id="run" style="background-color: rgb(49, 109, 9); font-weight: 600"style="padding: 10px" class="btn btn-md btn-secondary p-2">
                             <span>Run &#9655;</span>
                         </button>
+                        <button id="share" style="background-color: rgb(0, 161, 198); font-weight: 600"style="padding: 10px" class="btn btn-md btn-secondary p-2">
+                            <span>Share</span>
+                        </button>
                     </div>
-                    <div id="output"></div>
+                    <div id="output" style="margin-top:50px; margin-left: 50px;"></div>
                 </div>
             </div>
         </main>
