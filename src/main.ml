@@ -91,8 +91,7 @@ module Codec = struct
         let+ dec = Base64.decode jstr in
         let+ code = Base64.data_utf_8_to_jstr dec in
         Ok (Jstr.to_string code)
-    | None ->
-      Ok Example.locality
+    | None -> Error (Jv.Error.v (Jstr.v "No window code"))
 
   let to_window s =
     let data = Base64.data_utf_8_of_jstr s in
@@ -104,8 +103,13 @@ module Codec = struct
 end
 
 let setup () =
+  let default =
+    match Brr_io.Storage.get_item (Brr_io.Storage.local G.window) Edit.editor_key with
+    | Some doc -> Brr.Console.log ["Something"; doc]; Jstr.to_string doc
+    | None -> Brr.Console.log [ "Nothing" ]; Example.locality
+  in
   let initial_code =
-    Result.value ~default:Example.locality (Codec.from_window ())
+    Result.value ~default (Codec.from_window ())
   in
   let _state, view =
     Edit.init ~doc:(Jstr.v initial_code)

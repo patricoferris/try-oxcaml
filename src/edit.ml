@@ -23,11 +23,30 @@ let position_extension =
   Editor.View.Plugin.v update_position
   |> Editor.View.Plugin.to_extension
 
+let get_doc view =
+  let text = Editor.State.doc @@ Editor.View.state view in
+  Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
+  |> String.concat "\n"
+
+let editor_key = Jstr.v "try-oxcaml-code"
+
+let local_storage_extension =
+  let local = Brr_io.Storage.local Brr.G.window in
+  let update_storage (e : Editor.View.t) =
+    let state = Editor.View.state e in
+    let doc = Editor.State.doc state in
+    let s = Text.to_jstr_array doc |> Array.to_list |> Jstr.concat ~sep:(Jstr.v "\n") in
+    Brr_io.Storage.set_item local editor_key s
+    |> Brr.Console.log_if_error ~use:()
+  in
+  Editor.View.Plugin.v update_storage
+  |> Editor.View.Plugin.to_extension
+
 let init ?doc ?(exts = [||]) () =
   let open Editor in
   let config =
     State.Config.create ?doc
-      ~extensions:(Array.concat [ [| basic_setup; position_extension |]; exts ])
+      ~extensions:(Array.concat [ [| basic_setup; position_extension; local_storage_extension |]; exts ])
       ()
   in
   let state = State.create ~config () in
@@ -39,13 +58,9 @@ let set view ~doc ~exts =
   let open Editor in
   let config =
     State.Config.create ~doc
-      ~extensions:(Array.concat [ [| basic_setup; position_extension |]; exts ])
+      ~extensions:(Array.concat [ [| basic_setup; position_extension; local_storage_extension |]; exts ])
       ()
   in
   let state = State.create ~config () in
   View.set_state view state
 
-let get_doc view =
-  let text = Editor.State.doc @@ Editor.View.state view in
-  Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
-  |> String.concat "\n"
