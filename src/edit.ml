@@ -16,12 +16,14 @@ let position_extension =
     let position = Editor.Selection.Range.head range in
     let line = Text.line_at doc position in
     let col = position - Text.Line.from line in
-    El.set_children position_div [
-      El.txt' (string_of_int (Text.Line.number line));
-      El.txt' ":"; El.txt' (string_of_int col) ]
+    El.set_children position_div
+      [
+        El.txt' (string_of_int (Text.Line.number line));
+        El.txt' ":";
+        El.txt' (string_of_int col);
+      ]
   in
-  Editor.View.Plugin.v update_position
-  |> Editor.View.Plugin.to_extension
+  Editor.View.Plugin.v update_position |> Editor.View.Plugin.to_extension
 
 let get_doc view =
   let text = Editor.State.doc @@ Editor.View.state view in
@@ -35,18 +37,24 @@ let local_storage_extension =
   let update_storage (e : Editor.View.t) =
     let state = Editor.View.state e in
     let doc = Editor.State.doc state in
-    let s = Text.to_jstr_array doc |> Array.to_list |> Jstr.concat ~sep:(Jstr.v "\n") in
+    let s =
+      Text.to_jstr_array doc |> Array.to_list |> Jstr.concat ~sep:(Jstr.v "\n")
+    in
     Brr_io.Storage.set_item local editor_key s
     |> Brr.Console.log_if_error ~use:()
   in
-  Editor.View.Plugin.v update_storage
-  |> Editor.View.Plugin.to_extension
+  Editor.View.Plugin.v update_storage |> Editor.View.Plugin.to_extension
 
 let init ?doc ?(exts = [||]) () =
   let open Editor in
   let config =
     State.Config.create ?doc
-      ~extensions:(Array.concat [ [| basic_setup; position_extension; local_storage_extension |]; exts ])
+      ~extensions:
+        (Array.concat
+           [
+             [| basic_setup; position_extension; local_storage_extension |];
+             exts;
+           ])
       ()
   in
   let state = State.create ~config () in
@@ -58,9 +66,13 @@ let set view ~doc ~exts =
   let open Editor in
   let config =
     State.Config.create ~doc
-      ~extensions:(Array.concat [ [| basic_setup; position_extension; local_storage_extension |]; exts ])
+      ~extensions:
+        (Array.concat
+           [
+             [| basic_setup; position_extension; local_storage_extension |];
+             exts;
+           ])
       ()
   in
   let state = State.create ~config () in
   View.set_state view state
-

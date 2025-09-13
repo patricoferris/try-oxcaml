@@ -37,10 +37,9 @@ let async_raise f = Lwt.async (fun () -> Lwt.map or_raise @@ f ())
 
 module Merlin = Merlin_codemirror.Make (struct
   let worker_url = "./merlin.js"
-  let cmis = Protocol.{
-    static_cmis = Static_files.stdlib_cmis;
-    dynamic_cmis = None;
-  }
+
+  let cmis =
+    Protocol.{ static_cmis = Static_files.stdlib_cmis; dynamic_cmis = None }
 end)
 
 (* Need to port lesser-dark and custom theme to CM6, until then just using the
@@ -56,26 +55,32 @@ let get_el_by_id s =
       Console.warn [ Jstr.v "Failed to get elemented by id" ];
       invalid_arg s
 
-let white el = El.set_inline_style (Jstr.v "color") (Jstr.v "rgba(255, 255, 255)") el
+let white el =
+  El.set_inline_style (Jstr.v "color") (Jstr.v "rgba(255, 255, 255)") el
+
 let red el = El.set_inline_style (Jstr.v "color") (Jstr.v "rgb(255, 99, 99)") el
 
 let handle_output (o : Toplevel_api.exec_result) =
   let output = get_el_by_id "output" in
   let stdout =
-    El.(p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.stdout)]) 
+    El.(
+      p
+        ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;") ]
+        [ txt' (Option.value ~default:"" o.stdout) ])
   in
-  let stderr = 
-     El.(p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.stderr)])
+  let stderr =
+    El.(
+      p
+        ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;") ]
+        [ txt' (Option.value ~default:"" o.stderr) ])
   in
   let ppf =
-    El.(p ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;")] [ txt' (Option.value ~default:"" o.caml_ppf)])
+    El.(
+      p
+        ~at:[ At.v (Jstr.v "style") (Jstr.v "white-space: pre-wrap;") ]
+        [ txt' (Option.value ~default:"" o.caml_ppf) ])
   in
-  let out = El.(div [
-    stdout;
-    stderr;
-    ppf
-  ])
-  in 
+  let out = El.(div [ stdout; stderr; ppf ]) in
   white stdout;
   red stderr;
   El.append_children output [ out ]
@@ -104,13 +109,17 @@ end
 
 let setup () =
   let default =
-    match Brr_io.Storage.get_item (Brr_io.Storage.local G.window) Edit.editor_key with
-    | Some doc -> Brr.Console.log ["Something"; doc]; Jstr.to_string doc
-    | None -> Brr.Console.log [ "Nothing" ]; Example.locality
+    match
+      Brr_io.Storage.get_item (Brr_io.Storage.local G.window) Edit.editor_key
+    with
+    | Some doc ->
+        Brr.Console.log [ "Something"; doc ];
+        Jstr.to_string doc
+    | None ->
+        Brr.Console.log [ "Nothing" ];
+        Example.locality
   in
-  let initial_code =
-    Result.value ~default (Codec.from_window ())
-  in
+  let initial_code = Result.value ~default (Codec.from_window ()) in
   let _state, view =
     Edit.init ~doc:(Jstr.v initial_code)
       ~exts:
@@ -133,12 +142,13 @@ let setup () =
   in
   let* _ = setup () in
   let share = get_el_by_id "share" in
-  let _listener = Ev.(
-    listen click
-      (fun _ ->
-        Console.log_if_error ~use:()
-          (Codec.to_window @@ Jstr.v (Edit.get_doc view)))
-      (El.as_target share))
+  let _listener =
+    Ev.(
+      listen click
+        (fun _ ->
+          Console.log_if_error ~use:()
+            (Codec.to_window @@ Jstr.v (Edit.get_doc view)))
+        (El.as_target share))
   in
   let button = get_el_by_id "run" in
   let on_click _ =
@@ -146,7 +156,9 @@ let setup () =
       Brr.Console.log [ "Running" ];
       El.set_children button [];
       El.set_class (Jstr.v "loader") true button;
-      let* o = with_rpc (Lwt.return rpc) Toprpc.exec (Edit.get_doc view ^ ";;") in
+      let* o =
+        with_rpc (Lwt.return rpc) Toprpc.exec (Edit.get_doc view ^ ";;")
+      in
       El.set_class (Jstr.v "loader") false button;
       El.set_children button [ El.span [ El.txt' "Run ▷" ] ];
       handle_output o;
